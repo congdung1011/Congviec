@@ -1,0 +1,216 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+  .result-W { color: p; }
+  .result-R { color: blue; }
+  .result-H { color: red; }
+  .result-L { color: purple; }
+  .result-A { color: green; }
+</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Arc Calculator</title>
+  <style>
+    body {  
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f9f9f9;
+      box-sizing: border-box;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      text-align: center;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+    h1 {
+      color: #444;
+    }
+    .input-row {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+    .input-group {
+      flex: 1 1 45%;
+      margin: 10px;
+    }
+    input {
+      width: 80%;
+      padding: 10px;
+      margin-left: 10px;
+      font-size: 16px;
+    }
+    label {
+      font-weight: bold;
+    }
+    .result {
+      color: brown;
+      font-size: 18px;
+      margin-top: 15px;
+    }
+    .button {
+      font-size: 20px;
+      padding: 10px 20px;
+      margin-top: 15px;
+      background-color: #ddd;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    select {
+      font-size: 16px;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+<img src="22.jpeg" alt="Hình ảnh mô tả" style="width:300px; height: auto; display: block; margin: auto;">
+    <div class="input-row">
+      <div class="input-group"><label for="value1">Value 1:</label><input id="value1" type="number" /></div>
+      <div class="input-group"><label for="value2">Value 2:</label><input id="value2" type="number" /></div>
+    </div>
+
+    <div class="input-row">
+      <div class="input-group"><label for="type1">Type 1:</label>
+        <select id="type1">
+
+  <option value="W" selected>W (Width)</option>
+  <option value="H">H (Height)</option>
+  <option value="L">L (Arc Length)</option>
+  <option value="A">A (Angle in Degrees)</option>
+  <option value="R">R (Radius)</option>
+</select>
+      </div>
+      <div class="input-group"><label for="type2">Type 2:</label>
+    
+<select id="type2">
+  <option value="W">W (Width)</option>
+  <option value="H">H (Height)</option>
+  <option value="L">L (Arc Length)</option>
+  <option value="A">A (Angle in Degrees)</option>
+  <option value="R" selected>R (Radius)</option>
+</select>
+      </div>
+    </div>
+
+    <button class="button" onclick="calculate()">=</button>
+
+    <div class="result" id="output">Phan Công Dũng</div>
+  </div>
+
+  <script>
+    function toRadians(deg) {
+      return deg * (Math.PI / 180);
+    }
+    function toDegrees(rad) {
+      return rad * (180 / Math.PI);
+    }
+
+    function calculate() {
+      const v1 = parseFloat(document.getElementById('value1').value);
+      const v2 = parseFloat(document.getElementById('value2').value);
+      const t1 = document.getElementById('type1').value;
+      const t2 = document.getElementById('type2').value;
+      let W, R, H, L, A;
+      let result = "";
+
+      if (t1 === t2) {
+        result = "Please select two different types.";
+      } else {
+        const known = {};
+        known[t1] = v1;
+        known[t2] = v2;
+
+        try {
+          if (known.W && known.R) {
+            W = known.W;
+            R = known.R;
+            H = R - Math.sqrt(R*R - (W*W)/4);
+            A = 2 * Math.asin(W / (2 * R));
+            L = R * A;
+          } else if (known.L && known.W) {
+            W = known.W;
+            L = known.L;
+            A = 2 * Math.asin(W / (2 * (L / (2 * Math.asin(W / (2 * (L / (2 * Math.asin(W / L)))))))));
+            R = L / A;
+            H = R - Math.sqrt(R*R - (W*W)/4);
+          } else if (known.L && known.R) {
+            L = known.L;
+            R = known.R;
+            A = L / R;
+            W = 2 * R * Math.sin(A / 2);
+            H = R - Math.sqrt(R*R - (W*W)/4);
+          } else if (known.H && known.R) {
+            H = known.H;
+            R = known.R;
+            W = 2 * Math.sqrt(R*R - (R - H)*(R - H));
+            A = 2 * Math.asin(W / (2 * R));
+            L = R * A;
+          } else if (known.H && known.A) {
+            H = known.H;
+            A = toRadians(known.A);
+            R = H / (1 - Math.cos(A / 2));
+            W = 2 * R * Math.sin(A / 2);
+            L = R * A;
+          } else if (known.W && known.H) {
+            W = known.W;
+            H = known.H;
+            R = (H / 2) + (W * W / (8 * H));
+            A = 2 * Math.asin(W / (2 * R));
+            L = R * A;
+          } else if (known.H && known.L) {
+            H = known.H;
+            L = known.L;
+            R = (H / 2) + ((L * L) / (8 * H));
+            A = L / R;
+            W = 2 * R * Math.sin(A / 2);
+          } else if (known.L && known.A) {
+            L = known.L;
+            A = toRadians(known.A);
+            R = L / A;
+            W = 2 * R * Math.sin(A / 2);
+            H = R - Math.sqrt(R*R - (W*W)/4);
+          } else if (known.R && known.A) {
+            R = known.R;
+            A = toRadians(known.A);
+            L = R * A;
+            W = 2 * R * Math.sin(A / 2);
+            H = R - Math.sqrt(R*R - (W*W)/4);
+          } else if (known.W && known.A) {
+            W = known.W;
+            A = toRadians(known.A);
+            R = W / (2 * Math.sin(A / 2));
+            L = R * A;
+            H = R - Math.sqrt(R*R - (W*W)/4);
+          } else {
+            result = "This combination is not yet supported.";
+          }
+
+          if (!result) {
+            
+result += `<span class="result-W">Width W = ${W?.toFixed(2) || "?"} mm</span><br>`;
+result += `<span class="result-R">Radius R = ${R?.toFixed(2) || "?"} mm</span><br>`;
+result += `<span class="result-H">Height H = ${H?.toFixed(2) || "?"} mm</span><br>`;
+result += `<span class="result-L">Length L = ${L?.toFixed(2) || "?"} mm</span><br>`;
+result += `<span class="result-A">Angle A° = ${A ? toDegrees(A).toFixed(2) : "?"}°</span>`;
+
+          }
+        } catch (e) {
+          result = "Invalid input values.";
+        }
+      }
+
+      document.getElementById("output").innerHTML = result;
+    }
+  </script>
+</body>
+</html>

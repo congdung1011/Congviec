@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Tra Khối Lượng Thép H</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 30px;
+      padding: 40px;
+      background-color: #f4f4f4;
+    }
+    input, button {
+      font-size: 40px;
+      padding: 5px 30px;
+      margin: 5px 0;
+    }
+    button {
+      cursor: pointer;
+    }
+    #result {
+      margin-top: 30px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+  </style>
+</head>
+<body>
+  <h2>Tra khối lượng thép hình H</h2>
+
+  <label for="width">Chiều rộng b(가로) (mm):</label><br>
+  <input type="number" id="width"><br><br>
+
+  <label for="height">Chiều cao h(높이) (mm):</label><br>
+  <input type="number" id="height"><br><br>
+
+  <label for="length">Chiều dài(길이) (m):</label><br>
+  <input type="number" id="length" step="0.01"><br><br>
+
+  <button onclick="traKhoiLuong()">Tra cứu(계산)</button>
+  <p id="result"></p>
+
+  <script>
+    const data = {
+    "100x100": 17.2,
+    "100x50": 9.3,
+    "100x51": 17.2,
+    "100x52": 13.2,
+    "100x53": 23.8,
+    "100x54": 14,
+    "100x55": 21.1,
+    "100x56": 31.5,
+    "100x57": 18.1,
+    "100x58": 40.2,
+    "100x59": 18.2,
+    "100x60": 21.3,
+    "100x61": 30.6,
+    "100x62": 49.9,
+    "100x63": 56.2,
+    "100x64": 25.7,
+    "100x65": 29.6,
+    "100x66": 44.1,
+    "100x67": 72.4,
+    "100x68": 82.2,
+    "100x69": 84.5,
+    "125x125": 23.8,
+    "150x100": 21.4,
+    "150x150": 31.9,
+    "150x75": 14.3,
+    "175x175": 40.4,
+    "175x90": 18.2,
+    "198x99": 18.5,
+    "200x100": 21.7,
+    "200x150": 31.2,
+    "200x200": 50.5,
+    "200x204": 56.7,
+    "244x175": 44.1,
+    "248x124": 25.8,
+    "250x125": 29.7,
+    "250x250": 72.4,
+    "250x255": 82.2,
+    "294x200": 57.3,
+    "294x302": 85,
+    "298x149": 32.6,
+    "300x150": 37.3,
+    "300x200": 56.8,
+    "300x300": 94.5,
+    "300x305": 106,
+    "340x250": 79.7,
+    "344x348": 115,
+    "346x174": 41.8,
+    "350x175": 50,
+    "350x350": 137,
+    "388x402": 140,
+    "390x300": 107,
+    "394x398": 147,
+    "396x199": 56.6,
+    "400x150": 55.8,
+    "400x200": 66,
+    "400x400": 172,
+    "400x408": 197,
+    "414x405": 232,
+    "428x407": 283,
+    "440x300": 124,
+    "446x199": 66.2,
+    "450x200": 76,
+    "458x417": 415,
+    "482x300": 114,
+    "488x300": 128,
+    "496x199": 79.5,
+    "498x432": 605,
+    "500x200": 89.6,
+    "506x201": 103,
+    "582x300": 137,
+    "588x300": 151,
+    "594x302": 175,
+    "596x199": 94.6,
+    "600x200": 106,
+    "606x201": 120,
+    "692x300": 166,
+    "700x300": 185,
+    "792x300": 191,
+    "800x300": 210,
+    "890x299": 213,
+    "900x300": 243,
+    "912x302": 286
+  };
+
+    function traKhoiLuong() {
+      const b = document.getElementById('width').value;
+      const h = document.getElementById('height').value;
+      const l = document.getElementById('length').value;
+
+      const key1 = `${h}x${b}`;
+      const key2 = `${b}x${h}`;
+      const weightPerMeter = data[key1] || data[key2];
+
+      if (weightPerMeter) {
+        const total = (weightPerMeter * l).toFixed(2);
+        document.getElementById('result').innerText = 
+          `Khối lượng 1m(1미터당 무게): ${weightPerMeter} kg\nTổng khối lượng(총무게): ${total} kg`;
+      } else {
+        document.getElementById('result').innerText = 'Không tìm thấy thép H có kích thước này.';
+      }
+    }
+  </script>
+</body>
+</html>
