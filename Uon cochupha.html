@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>uốn cô chu pha</title>
+<style>
+
+  body {
+    font-family: Arial, sans-serif; /* Font chữ cho toàn bộ trang */
+    padding: 20px; /* Khoảng cách nội dung với viền trình duyệt */
+    font-size: 18px; /* Kích thước chữ mặc định */
+    background-color: #ccf5ff; /* Đặt nền trang thành màu xanh nhạt */
+  }\n  input, button, select {\n    margin: 4px 0; /* Khoảng cách trên/dưới giữa các ô nhập và nút */\n    padding: 6px 12px; /* Khoảng cách bên trong nút/ô nhập */\n    font-size: 30px; /* Kích thước chữ cho nút và ô nhập */\n  }\n  input[type="file"] {\n    font-size: 25px; /* Kích thước chữ riêng cho ô chọn file */\n  }\n  input {\n    width: 800px; /* Chiều rộng của ô nhập liệu */\n    font-size: 50px; /* Kích thước chữ trong ô nhập */\n    padding: 15px 35px; /* Khoảng cách bên trong ô nhập */\n    margin: 3px 0; /* Khoảng cách trên/dưới mỗi ô nhập */\n  background-color: #FFFFE0;\n  }\n  table {\n    width: 100%; /* Bảng chiếm toàn bộ chiều rộng */\n    border-collapse: collapse; /* Gộp viền bảng lại thành viền đơn */\n    margin-top: 20px; /* Khoảng cách phía trên bảng */\n    font-size: 22px; /* Kích thước chữ trong bảng */\n  }\n  th, td {\n    border: 1px solid #ccc; /* Viền xám cho các ô */\n    padding: 8px; /* Khoảng cách bên trong ô */\n    text-align: center; /* Căn giữa chữ trong ô */\n  }\n  th {\n    background-color: #f2f2f2; /* Màu nền cho hàng tiêu đề bảng */\n  }\n  /* CSS cho hiệu ứng nhấp nháy chữ đỏ nền vàng chanh */\n  @keyframes blink {\n    0% { background-color: #ccff00; color: red; }\n    50% { background-color: #ffff00; color: transparent; }\n    100% { background-color: #ccff00; color: red; }\n  }\n  .sparkle {\n    animation: blink 1s infinite; /* Chạy hiệu ứng vô hạn */\n    font-weight: bold; /* Chữ đậm */\n  }\n  .btn {\n    font-size: 20px; /* Kích thước chữ cho nút Sửa/Xóa trong bảng */\n    padding: 4px 8px;\n    cursor: pointer;\n  }\n  .edit-btn {\n    background-color: #4CAF50; /* Màu nền xanh lá cho nút Sửa */\n    color: white;\n    border: none;\n  }\n  .delete-btn {\n    background-color: #f44336; /* Màu nền đỏ cho nút Xóa */\n    color: white;\n    border: none;\n  }\n  .search-container {\n    margin-bottom: 15px; /* Khoảng cách dưới ô tìm kiếm */\n  }\n  .search-container input {\n    width: 300px; /* Chiều rộng riêng cho ô tìm kiếm */\n    font-size: 20px;\n    padding: 6px;\n  }\n</style>\n</head>\n<body>\n\n\n<div id="passwordContainer" style="text-align: center; margin-top: 100px;">\n  <h2>Nhập mật khẩu để truy cập hệ thống uốn</h2>\n  <input type="password" id="passwordInput" placeholder="Mật khẩu" style="width: 300px; font-size: 24px; padding: 10px; text-align: center;" />\n  <br><br>\n  <button onclick="checkPassword()" style="font-size: 24px; padding: 10px 20px;">Xác nhận</button>\n  <br><br>\n  <button onclick="changePassword()" style="font-size: 20px; padding: 5px 10px; background-color: orange; color: white; border: none; border-radius: 5px;">Đổi mật khẩu mới</button>\n  <button onclick="forgotPassword()" style="font-size: 20px; padding: 5px 10px; background-color: gray; color: white; border: none; border-radius: 5px;">Quên mật khẩu</button>\n  <p id="errorMessage" style="color: red; font-weight: bold; margin-top: 15px;"></p>\n</div>\n\n\n<div id="mainContent" style="display: none;">\n  <h2>Thông Số Uốn Ống</h2>\n  \n  \n  <label>Tiêu đề (Loại ống uốn):</label><br>\n  <input type="text" id="title" placeholder="Nhập tiêu đề..."><br>\n  \n  <label>R (Bán kính uốn):</label><br>\n  <input type="text" id="radius" placeholder="Nhập bán kính..."><br>\n  \n  <label>Tốc độ uốn:</label><br>\n  <input type="text" id="speed" placeholder="Nhập tốc độ..."><br>\n  \n  <label>Áp lực thủy lực (Khuôn):</label><br>\n  <input type="text" id="hydraulic" placeholder="Nhập áp lực thủy lực..."><br>\n  \n  <label>Độ dày thành ống:</label><br>\n  <input type="text" id="thickness" placeholder="Nhập độ dày..."><br>\n  \n  <label>Nhiệt độ nung sơ bộ (Nung nóng):</label><br>\n  <input type="text" id="preheat" placeholder="Nhập nhiệt độ nung..."><br>\n  \n  <label>Dòng điện cao tần:</label><br>\n  <input type="text" id="electric" placeholder="Nhập dòng điện..."><br>\n  \n  <label>Vật liệu ống:</label><br>\n  <input type="text" id="material" placeholder="Nhập vật liệu..."><br>\n  \n  <label>Ghi chú thêm:</label><br>\n  <input type="text" id="note" placeholder="Nhập ghi chú..."><br><br>\n\n  \n  <button onclick="saveData()">Lưu thông số</button>\n  <button onclick="exportJSON()">Xuất file JSON</button>\n  <input type="file" id="importFile" accept=".json" onchange="importJSON()">\n\n  <hr>\n  \n  \n  <div class="search-container">\n    <label style="font-weight: bold;">Tìm kiếm loại ống: </label>\n    <input type="text" id="searchInput" placeholder="Nhập từ khóa tìm kiếm..." oninput="searchData()">\n  </div>\n\n  \n  <table id="dataTable">\n    <thead>\n      <tr>\n        <th>Tiêu đề (Loại ống)</th>\n        <th>Bán kính uốn (R)</th>\n        <th>Tốc độ uốn</th>\n        <th>Áp lực thủy lực</th>\n        <th>Độ dày thành ống</th>\n        <th>Nhiệt độ nung</th>\n        <th>Dòng điện cao tần</th>\n        <th>Vật liệu ống</th>\n        <th>Ghi chú</th>\n        <th>Thao tác</th>\n      </tr>\n    </thead>\n    <tbody>\n      \n    </tbody>\n  </table>\n\n  <script>
+    let editingId = null;
+
+    // ĐƯỜNG LINK FIREBASE CỦA BẠN
+    const FIREBASE_URL = "https://du-lieu-uon-default-rtdb.asia-southeast1.firebasedatabase.app/thongso.json";
+    const FIREBASE_PASS_URL = "https://du-lieu-uon-default-rtdb.asia-southeast1.firebasedatabase.app/matkhau_uon.json";
+
+    // Hàm kiểm tra mật khẩu từ Firebase khi bấm Xác nhận
+    function checkPassword() {
+      const passwordInput = document.getElementById("passwordInput").value;
+      
+      fetch(FIREBASE_PASS_URL)
+      .then(response => response.json())
+      .then(cloudPass => {
+        const targetPass = cloudPass || "cXFxcQ=="; // Mặc định qqqq nếu chưa có trên Firebase
+        
+        if (btoa(passwordInput) === targetPass) {
+          document.getElementById("passwordContainer").style.display = "none";
+          document.getElementById("mainContent").style.display = "block";
+          renderTable();
+          loadDataFromFirebase();
+        } else {
+          document.getElementById("errorMessage").innerText = "Sai mật khẩu! Vui lòng thử lại.";
+        }
+      })
+      .catch(error => {
+        if (passwordInput === "qqqq") {
+          document.getElementById("passwordContainer").style.display = "none";
+          document.getElementById("mainContent").style.display = "block";
+          renderTable();
+        } else {
+          document.getElementById("errorMessage").innerText = "Sai mật khẩu hoặc lỗi kết nối mạng!";
+        }
+      });
+    }
+
+    // Hàm đổi mật khẩu mới và đẩy lên Firebase
+    function changePassword() {
+      const newPass = prompt("Nhập mật khẩu mới bạn muốn đổi:");
+      if (!newPass) return;
+      if (newPass.trim() === "") {
+        alert("Mật khẩu không được để trống!");
+        return;
+      }
+      
+      const encodedPass = btoa(newPass);
+      fetch(FIREBASE_PASS_URL, {
+        method: "PUT",
+        body: JSON.stringify(encodedPass),
+        headers: { "Content-Type": "application/json" }
+      })
+      .then(() => {
+        alert("Đã đổi mật khẩu thành công trên mạng đám mây!");
+      })
+      .catch(err => alert("Lỗi khi đổi mật khẩu: " + err));
+    }
+
+    // Hàm khôi phục lại mật khẩu mặc định khi quên
+    function forgotPassword() {
+      if (confirm("Bạn muốn đặt lại mật khẩu về mặc định (qqqq) không?")) {
+        fetch(FIREBASE_PASS_URL, {
+          method: "PUT",
+          body: JSON.stringify("cXFxcQ=="),
+          headers: { "Content-Type": "application/json" }
+        })
+        .then(() => {
+          alert("Mật khẩu đã được đặt lại thành: qqqq\nBạn hãy tải lại trang và nhập qqqq để vào.");
+        })
+        .catch(err => alert("Lỗi kết nối: " + err));
+      }
+    }
+
+    const getInputData = () => ({
+      id: editingId || Date.now(),
+      title: document.getElementById("title").value.trim(),
+      radius: document.getElementById("radius").value.trim() || '',  
+      speed: document.getElementById("speed").value.trim() || '',  
+      hydraulic: document.getElementById("hydraulic").value.trim() || '',  
+      thickness: document.getElementById("thickness").value.trim() || '',  
+      preheat: document.getElementById("preheat").value.trim() || '',  
+      electric: document.getElementById("electric").value.trim() || '',  
+      material: document.getElementById("material").value.trim() || '',  
+      note: document.getElementById("note").value.trim() || ''  
+    });
+
+    const saveData = () => {
+      const data = getInputData();
+      if (!data.title) {
+        alert("Vui lòng điền Tiêu đề.");
+        return;
+      }
+
+      let savedData = JSON.parse(localStorage.getItem("dataItems_cochupha") || "[]");
+      if (editingId) {
+        const index = savedData.findIndex(item => item.id === editingId);
+        if(index !== -1) savedData[index] = data;
+      } else {
+        savedData.push(data);
+      }
+      localStorage.setItem("dataItems_cochupha", JSON.stringify(savedData));
+      
+      fetch(FIREBASE_URL, {
+        method: "PUT",
+        body: JSON.stringify(savedData),
+        headers: { "Content-Type": "application/json" }
+      });
+
+      editingId = null;  
+      renderTable();
+      clearForm();
+    };
+
+    const renderTable = () => {
+      const data = JSON.parse(localStorage.getItem("dataItems_cochupha") || "[]");
+      const tbody = document.getElementById("dataTable").getElementsByTagName("tbody")[0];
+      tbody.innerHTML = "";  
+
+      data.forEach(item => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+          <td>${item.title}</td>
+          <td class="sparkle">${item.radius}</td>
+          <td>${item.speed}</td>
+          <td>${item.hydraulic}</td>
+          <td>${item.thickness}</td>
+          <td>${item.preheat}</td>
+          <td class="sparkle">${item.electric}</td>
+          <td>${item.material}</td>
+          <td>${item.note}</td>
+          <td>
+            <button class="btn edit-btn" onclick="editData(${item.id})">Sửa</button>
+            <button class="btn delete-btn" onclick="deleteData(${item.id})">Xóa</button>
+          </td>
+        `;
+      });
+    };
+
+    const loadDataFromFirebase = () => {
+      fetch(FIREBASE_URL)
+      .then(response => response.json())
+      .then(cloudData => {
+        if (cloudData) {
+          localStorage.setItem("dataItems_cochupha", JSON.stringify(cloudData));
+          renderTable();
+        }
+      });
+    };
+
+    const editData = (id) => {
+      const savedData = JSON.parse(localStorage.getItem("dataItems_cochupha"));
+      const item = savedData.find(data => data.id === id);
+      document.getElementById("title").value = item.title;
+      document.getElementById("radius").value = item.radius;
+      document.getElementById("speed").value = item.speed;
+      document.getElementById("hydraulic").value = item.hydraulic;
+      document.getElementById("thickness").value = item.thickness;
+      document.getElementById("preheat").value = item.preheat;
+      document.getElementById("electric").value = item.electric;
+      document.getElementById("material").value = item.material;
+      document.getElementById("note").value = item.note;
+      editingId = id;  
+    };
+
+    const deleteData = (id) => {
+      if (!confirm("Bạn có chắc chắn muốn xóa mục này không?")) return;
+      let savedData = JSON.parse(localStorage.getItem("dataItems_cochupha"));
+      savedData = savedData.filter(item => item.id !== id);
+      localStorage.setItem("dataItems_cochupha", JSON.stringify(savedData));
+
+      fetch(FIREBASE_URL, {
+        method: "PUT",
+        body: JSON.stringify(savedData),
+        headers: { "Content-Type": "application/json" }
+      });
+      renderTable();
+    };
+
+    const searchData = () => {
+      const searchText = document.getElementById("searchInput").value.toLowerCase();
+      const savedData = JSON.parse(localStorage.getItem("dataItems_cochupha") || "[]");
+      const filteredData = savedData.filter(item => item.title.toLowerCase().includes(searchText));
+      renderSearchResults(filteredData);
+    };
+
+    const renderSearchResults = (data) => {
+      const tbody = document.getElementById("dataTable").getElementsByTagName("tbody")[0];
+      tbody.innerHTML = "";  
+      data.forEach(item => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+          <td>${item.title}</td>
+          <td class="sparkle">${item.radius}</td>
+          <td>${item.speed}</td>
+          <td>${item.hydraulic}</td>
+          <td>${item.thickness}</td>
+          <td>${item.preheat}</td>
+          <td class="sparkle">${item.electric}</td>
+          <td>${item.material}</td>
+          <td>${item.note}</td>
+          <td>
+            <button class="btn edit-btn" onclick="editData(${item.id})">Sửa</button>
+            <button class="btn delete-btn" onclick="deleteData(${item.id})">Xóa</button>
+          </td>
+        `;
+      });
+    };
+
+    const exportJSON = () => {
+      const data = localStorage.getItem("dataItems_cochupha");
+      if (!data) return;
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "cochupha.json";
+      a.click();
+    };
+
+    const importJSON = () => {
+      const file = document.getElementById("importFile").files[0];
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const importedData = JSON.parse(event.target.result);
+        localStorage.setItem("dataItems_cochupha", JSON.stringify(importedData));
+        fetch(FIREBASE_URL, {
+          method: "PUT",
+          body: JSON.stringify(importedData),
+          headers: { "Content-Type": "application/json" }
+        });
+        renderTable();
+      };
+      reader.readAsText(file);
+    };
+
+    const clearForm = () => {
+      document.getElementById("title").value = '';
+      document.getElementById("radius").value = '';
+      document.getElementById("speed").value = '';
+      document.getElementById("hydraulic").value = '';
+      document.getElementById("thickness").value = '';
+      document.getElementById("preheat").value = '';
+      document.getElementById("electric").value = '';
+      document.getElementById("material").value = '';
+      document.getElementById("note").value = '';
+    };
+
+    window.onload = function () {
+      renderTable();
+    };
+  </script>
+</div>
+</body>
+</html>
+test

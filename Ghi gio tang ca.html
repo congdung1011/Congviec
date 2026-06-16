@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Ghi Giờ Tăng Ca</title>
+  <style>
+    body { font-family: Arial; font-size: 20px; padding: 5px; background: #f0f8ff; }\n    input, button { margin: 5px 0; padding: 30px; width: 30%; font-size: 40px; }\n    table { width: 100%; border-collapse: collapse; margin-top: 50px; font-size: 30px; }\n    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }\n    th { background: #dff0d8; }\n    .btn-xoa { color: red; cursor: pointer; font-weight: bold; }\n    .thang-title {\n      color: red; background: #d0e9f5; font-weight: bold;font-size: 22px; padding: 10px; margin-top: 10px;\n    }\n    .tong-gio {\n      color: blue;\n    }\n  </style>\n</head>\n<body>\n\n\n<div id="khoaMatKhau" style="text-align: center; margin-top: 100px;">\n  <h2>Nhập mật khẩu để mở giờ tăng ca</h2>\n  <input type="password" id="matKhau" placeholder="Mật khẩu" style="width: 50%; padding: 15px; font-size: 30px; text-align: center;" />\n  <br><br>\n  <button onclick="kiemTraMatKhau()">Mở khóa</button>\n  <br><br>\n  <button onclick="doiMatKhau()" style="font-size: 24px; padding: 10px 20px; background-color: orange; color: white; border: none; border-radius: 5px;">Đổi mật khẩu</button>\n  <button onclick="quenMatKhau()" style="font-size: 24px; padding: 10px 20px; background-color: gray; color: white; border: none; border-radius: 5px;">Quên mật khẩu</button>\n</div>\n\n\n<div id="noiDung" style="display: none;">\n  <h2>Nhập số giờ tăng ca hàng ngày</h2>\n  \n  <label>Chọn Ngày:</label><br>\n  <input type="date" id="ngay" style="width: 50%; padding: 15px; font-size: 30px;" /><br>\n  \n  <label>Số giờ tăng ca:</label><br>\n  <input type="number" id="gio" step="0.1" placeholder="Ví dụ: 1.5 hoặc 2" style="width: 50%; padding: 15px; font-size: 30px;" /><br><br>\n  \n  <button onclick="themGio()">Ghi lại</button>\n  <button onclick="xoaTatCa()" style="background:#f2dede; color:#a94442;">Xoá hết tất cả</button>\n  <button onclick="xuatDuLieu()">Xuất JSON</button>\n  \n  <br><br>\n  <input type="file" id="taiFile" accept=".json" onchange="taiDuLieuTuFile()" style="width: 50%; font-size: 20px;" />\n  \n  <hr style="margin-top: 40px;">\n  \n  <h3>Tìm kiếm theo ngày:</h3>\n  <input type="date" id="ngayTimKiem" style="width: 40%; font-size: 25px; padding: 10px;" />\n  <button onclick="timKiemNgay()" style="width: 20%; font-size: 25px; padding: 10px;">Tìm</button>\n  <p id="ketQuaTimKiem" style="font-size: 25px; color: darkblue; font-weight: bold;"></p>\n\n  <div id="danhSachBang"></div>\n\n  <script>
+    let danhSach = [];
+
+    // ĐƯỜNG LINK FIREBASE CỦA BẠN (Dành riêng cho mục Tăng Ca)
+    const FIREBASE_URL = "https://du-lieu-uon-default-rtdb.asia-southeast1.firebasedatabase.app/tangca.json";
+    const FIREBASE_PASS_URL = "https://du-lieu-uon-default-rtdb.asia-southeast1.firebasedatabase.app/matkhau_tangca.json";
+
+    function kiemTraMatKhau() {
+      const nhap = document.getElementById('matKhau').value;
+      
+      fetch(FIREBASE_PASS_URL)
+      .then(response => response.json())
+      .then(cloudPass => {
+        const targetPass = cloudPass || "cXFxcQ=="; // Mặc định qqqq nếu chưa có
+        
+        if (btoa(nhap) === targetPass) {
+          document.getElementById('khoaMatKhau').style.display = 'none';
+          document.getElementById('noiDung').style.display = 'block';
+          hienThiBang();
+          loadDuLieuTuFirebase();
+        } else {
+          alert('Sai mật khẩu!');
+        }
+      })
+      .catch(error => {
+        if (nhap === "qqqq") {
+          document.getElementById('khoaMatKhau').style.display = 'none';
+          document.getElementById('noiDung').style.display = 'block';
+          hienThiBang();
+        } else {
+          alert('Sai mật khẩu hoặc lỗi kết nối mạng!');
+        }
+      });
+    }
+
+    function doiMatKhau() {
+      const newPass = prompt("Nhập mật khẩu tăng ca mới:");
+      if (!newPass) return;
+      if (newPass.trim() === "") {
+        alert("Mật khẩu không được rỗng!");
+        return;
+      }
+      const encodedPass = btoa(newPass);
+      fetch(FIREBASE_PASS_URL, {
+        method: "PUT",
+        body: JSON.stringify(encodedPass),
+        headers: { "Content-Type": "application/json" }
+      })
+      .then(() => alert("Đã đổi mật khẩu tăng ca thành công!"))
+      .catch(err => alert("Lỗi: " + err));
+    }
+
+    function quenMatKhau() {
+      if (confirm("Đặt lại mật khẩu tăng ca về mặc định (qqqq)?")) {
+        fetch(FIREBASE_PASS_URL, {
+          method: "PUT",
+          body: JSON.stringify("cXFxcQ=="),
+          headers: { "Content-Type": "application/json" }
+        })
+        .then(() => alert("Đã reset mật khẩu tăng ca về: qqqq"))
+        .catch(err => alert("Lỗi: " + err));
+      }
+    }
+
+    function taiDuLieu() {
+      const data = localStorage.getItem('tangCa');
+      danhSach = data ? JSON.parse(data) : [];
+    }
+
+    function luuDuLieu() {
+      localStorage.setItem('tangCa', JSON.stringify(danhSach));
+      fetch(FIREBASE_URL, {
+        method: "PUT",
+        body: JSON.stringify(danhSach),
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
+    function loadDuLieuTuFirebase() {
+      fetch(FIREBASE_URL)
+      .then(response => response.json())
+      .then(cloudData => {
+        if (cloudData && Array.isArray(cloudData)) {
+          localStorage.setItem('tangCa', JSON.stringify(cloudData));
+          hienThiBang();
+        }
+      });
+    }
+
+    function tachTheoThang(ds) {
+      const ketQua = {};
+      ds.forEach(muc => {
+        const thang = muc.ngay.substring(0, 7);
+        if (!ketQua[thang]) ketQua[thang] = [];
+        ketQua[thang].push(muc);
+      });
+      return ketQua;
+    }
+
+    function hienThiBang() {
+      taiDuLieu();
+      danhSach.sort((a, b) => new Date(b.ngay) - new Date(a.ngay));
+      const container = document.getElementById('danhSachBang');
+      container.innerHTML = '';
+      const theoThang = tachTheoThang(danhSach);
+      const thangDaSapXep = Object.keys(theoThang).sort().reverse();
+      const tongNamDict = {};
+
+      thangDaSapXep.forEach(thang => {
+        const bangHTML = document.createElement('div');
+        const tieuDe = document.createElement('div');
+        tieuDe.className = 'thang-title';
+        const [yThang, mThang] = thang.split("-");
+        tieuDe.innerText = `Tháng: ${mThang} - ${yThang}`;
+        bangHTML.appendChild(tieuDe);
+
+        const bang = document.createElement('table');
+        bang.innerHTML = '<tr><th>Ngày</th><th>Giờ Tăng Ca</th><th>Xoá</th></tr>';
+        let tong = 0;
+
+        theoThang[thang]
+          .sort((a, b) => new Date(b.ngay) - new Date(a.ngay))
+          .forEach((muc) => {
+            const indexGlobal = danhSach.indexOf(muc);
+            const hang = bang.insertRow();
+            const oNgay = hang.insertCell(0);
+            const oGio = hang.insertCell(1);
+            const oXoa = hang.insertCell(2);
+
+            const [y, m, d] = muc.ngay.split("-");
+            oNgay.textContent = `${d} - ${m} - ${y}`;
+            oGio.textContent = muc.gio;
+
+            const nutXoa = document.createElement('button');
+            nutXoa.textContent = 'X';
+            nutXoa.className = 'btn-xoa';
+            nutXoa.onclick = function () {
+              if (confirm('Bạn có thật sự muốn xoá dòng này không?') && indexGlobal !== -1) {
+                xoaDong(indexGlobal);
+              }
+            };
+            oXoa.appendChild(nutXoa);
+
+            tong += parseFloat(muc.gio);
+            if (!tongNamDict[y]) tongNamDict[y] = 0;
+            tongNamDict[y] += parseFloat(muc.gio);
+        });
+
+        const tongHTML = document.createElement('div');
+        tongHTML.style.marginTop = '5px';
+        tongHTML.innerHTML = `<strong class="tong-gio">Tổng giờ trong tháng ${mThang} - ${yThang}: ${tong.toFixed(1)} giờ</strong>`;
+        bangHTML.appendChild(bang);
+        bangHTML.appendChild(tongHTML);
+        container.appendChild(bangHTML);
+      });
+
+      const tongNamHTML = document.createElement('div');
+      tongNamHTML.style.marginTop = '30px';
+      tongNamHTML.innerHTML = '<h3 style="color:green;">Tổng số giờ tăng ca theo từng năm:</h3>';
+      const danhSachNam = Object.keys(tongNamDict).sort().reverse();
+      danhSachNam.forEach(nam => {
+        const p = document.createElement('p');
+        p.style.fontSize = '25px';
+        p.innerHTML = `<strong style="color:green;">Năm ${nam}</strong>: ${tongNamDict[nam].toFixed(1)} giờ`;
+        tongNamHTML.appendChild(p);
+      });
+      container.appendChild(tongNamHTML);
+    }
+
+    function themGio() {
+      const ngay = document.getElementById('ngay').value;
+      const gio = document.getElementById('gio').value;
+      if (!ngay || !gio) {
+        alert('Vui lòng nhập đầy đủ ngày và giờ');
+        return;
+      }
+      danhSach.push({ ngay, gio });
+      luuDuLieu();
+      hienThiBang();
+      document.getElementById('gio').value = '';
+    }
+
+    function xoaDong(index) {
+      if (index >= 0) {
+        danhSach.splice(index, 1);
+        luuDuLieu();
+        hienThiBang();
+      }
+    }
+
+    function xoaTatCa() {
+      if (confirm('Bạn có chắc chắn muốn xoá hết dữ liệu?')) {
+        danhSach = [];
+        localStorage.removeItem('tangCa');
+        fetch(FIREBASE_URL, { method: "DELETE" }).then(() => hienThiBang());
+      }
+    }
+
+    function timKiemNgay() {
+      const ngayCanTim = document.getElementById('ngayTimKiem').value;
+      if (!ngayCanTim) return alert("Vui lòng chọn ngày cần tìm.");
+      taiDuLieu();
+      const ketQua = danhSach.find(item => item.ngay === ngayCanTim);
+      const hienThi = document.getElementById('ketQuaTimKiem');
+      if (ketQua) {
+        hienThi.innerHTML = `Ngày ${ngayCanTim.split("-").reverse().join(" - ")} có tăng ca: <strong>${ketQua.gio}</strong> giờ.`;
+      } else {
+        hienThi.innerHTML = `Ngày ${ngayCanTim.split("-").reverse().join(" - ")} <strong>không có</strong> giờ tăng ca.`;
+      }
+    }
+
+    function xuatDuLieu() {
+      taiDuLieu();
+      const blob = new Blob([JSON.stringify(danhSach, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "du_lieu_tang_ca.json";
+      a.click();
+    }
+
+    function taiDuLieuTuFile() {
+      const fileInput = document.getElementById('taiFile');
+      const file = fileInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const duLieu = JSON.parse(e.target.result);
+          if (Array.isArray(duLieu)) {
+            danhSach = duLieu;
+            luuDuLieu();
+            hienThiBang();
+            alert("Tải dữ liệu thành công!");
+          }
+        } catch (err) { alert("Lỗi đọc file"); }
+      };
+      reader.readAsText(file);
+    }
+
+    window.onload = hienThiBang;
+  </script>
+</div>
+</body>
+</html>
+test
