@@ -45,8 +45,11 @@ Phan Công Dũng
 
   <div id="danhSachBang"></div>
 
-  <script>
+    <script>
     let danhSach = [];
+
+    // ĐƯỜNG LINK FIREBASE CỦA BẠN (Dành riêng cho mục Tăng Ca)
+    const FIREBASE_URL = "https://du-lieu-uon-default-rtdb.asia-southeast1.firebasedatabase.app/tangca.json";
 
     function taiDuLieu() {
       const data = localStorage.getItem('tangCa');
@@ -55,6 +58,35 @@ Phan Công Dũng
 
     function luuDuLieu() {
       localStorage.setItem('tangCa', JSON.stringify(danhSach));
+      
+      // Tự động đồng bộ toàn bộ danh sách mới lên mạng đám mây Firebase
+      fetch(FIREBASE_URL, {
+        method: "PUT",
+        body: JSON.stringify(danhSach),
+        headers: { "Content-Type": "application/json" }
+      })
+      .then(response => response.json())
+      .then(() => {
+        console.log("Đã đồng bộ giờ tăng ca lên mạng thành công!");
+      })
+      .catch(error => {
+        console.error("Lỗi đồng bộ mạng:", error);
+      });
+    }
+
+    // Hàm tự động tải dữ liệu từ Firebase về máy khi mở ứng dụng
+    function loadDuLieuTuFirebase() {
+      fetch(FIREBASE_URL)
+      .then(response => response.json())
+      .then(cloudData => {
+        if (cloudData && Array.isArray(cloudData)) {
+          localStorage.setItem('tangCa', JSON.stringify(cloudData));
+          hienThiBang();
+        }
+      })
+      .catch(error => {
+        console.error("Không lấy được dữ liệu từ mạng, đang dùng dữ liệu trên máy:", error);
+      });
     }
 
     function tachTheoThang(ds) {
@@ -165,7 +197,13 @@ Phan Công Dũng
       if (confirm('Bạn có chắc chắn muốn xoá hết dữ liệu?')) {
         danhSach = [];
         localStorage.removeItem('tangCa');
-        hienThiBang();
+        
+        // Xóa hoàn toàn dữ liệu trên Firebase mạng đám mây
+        fetch(FIREBASE_URL, { method: "DELETE" })
+        .then(() => {
+          hienThiBang();
+          alert("Đã xóa sạch dữ liệu trên cả máy và mạng!");
+        });
       }
     }
 
@@ -223,8 +261,13 @@ Phan Công Dũng
       reader.readAsText(file);
     }
 
-    window.onload = hienThiBang;
+    // Khi mở trang, hiển thị bảng từ máy trước rồi tự cập nhật bản mới nhất trên Firebase về
+    window.onload = function() {
+      hienThiBang();
+      loadDuLieuTuFirebase();
+    };
   </script>
+
 </div>
 <script>
   function kiemTraMatKhau() {
