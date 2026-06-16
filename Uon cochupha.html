@@ -212,22 +212,26 @@ height: 120px;   /* Chiều cao */
     <tbody></tbody>
   </table>
 
-  <script>
+    <script>
     let editingId = null;
+
+    // ĐƯỜNG LINK FIREBASE CỦA BẠN (Đã thêm đuôi /thongso.json)
+    const FIREBASE_URL = "https://du-lieu-uon-default-rtdb.asia-southeast1.firebasedatabase.app/thongso.json";
 
     const getInputData = () => ({
       id: editingId || Date.now(),
       title: document.getElementById("title").value.trim(),
-      radius: document.getElementById("radius").value.trim() || '',  // Cho phép trống
-      speed: document.getElementById("speed").value.trim() || '',  // Cho phép trống
-      hydraulic: document.getElementById("hydraulic").value.trim() || '',  // Cho phép trống
-      thickness: document.getElementById("thickness").value.trim() || '',  // Cho phép trống
-      preheat: document.getElementById("preheat").value.trim() || '',  // Cho phép trống
-      electric: document.getElementById("electric").value.trim() || '',  // Cho phép trống
-      material: document.getElementById("material").value.trim() || '',  // Cho phép trống
-      note: document.getElementById("note").value.trim() || ''  // Cho phép trống
+      radius: document.getElementById("radius").value.trim() || '',  
+      speed: document.getElementById("speed").value.trim() || '',  
+      hydraulic: document.getElementById("hydraulic").value.trim() || '',  
+      thickness: document.getElementById("thickness").value.trim() || '',  
+      preheat: document.getElementById("preheat").value.trim() || '',  
+      electric: document.getElementById("electric").value.trim() || '',  
+      material: document.getElementById("material").value.trim() || '',  
+      note: document.getElementById("note").value.trim() || ''  
     });
 
+    // Hàm lưu dữ liệu lên cả mạng (Firebase) và máy (localStorage)
     const saveData = () => {
       const data = getInputData();
       if (!data.title) {
@@ -235,15 +239,31 @@ height: 120px;   /* Chiều cao */
         return;
       }
 
+      // 1. Lưu tạm vào máy trước để hiển thị nhanh
       let savedData = JSON.parse(localStorage.getItem("dataItems_cochupha") || "[]");
       if (editingId) {
         const index = savedData.findIndex(item => item.id === editingId);
-        savedData[index] = data;  // Cập nhật mục đã lưu
+        if(index !== -1) savedData[index] = data;
       } else {
-        savedData.push(data);  // Thêm mục mới
+        savedData.push(data);
       }
       localStorage.setItem("dataItems_cochupha", JSON.stringify(savedData));
-      editingId = null;  // Xóa ID chỉnh sửa
+      
+      // 2. Đẩy toàn bộ danh sách mới lên Firebase mạng đám mây (Ghi đè bằng lệnh PUT)
+      fetch(FIREBASE_URL, {
+        method: "PUT",
+        body: JSON.stringify(savedData),
+        headers: { "Content-Type": "application/json" }
+      })
+      .then(response => response.json())
+      .then(() => {
+        console.log("Đã đồng bộ lên mạng đám mây thành công!");
+      })
+      .catch(error => {
+        console.error("Lỗi đồng bộ mạng:", error);
+      });
+
+      editingId = null;  
       renderTable();
       clearForm();
     };
@@ -251,7 +271,7 @@ height: 120px;   /* Chiều cao */
     const renderTable = () => {
       const data = JSON.parse(localStorage.getItem("dataItems_cochupha") || "[]");
       const tbody = document.getElementById("dataTable").getElementsByTagName("tbody")[0];
-      tbody.innerHTML = "";  // Xóa dữ liệu cũ
+      tbody.innerHTML = "";  
 
       data.forEach(item => {
         const row = tbody.insertRow();
@@ -273,6 +293,22 @@ height: 120px;   /* Chiều cao */
       });
     };
 
+    // Hàm tự động tải dữ liệu từ trên mạng về khi mở trang web
+    const loadDataFromFirebase = () => {
+      fetch(FIREBASE_URL)
+      .then(response => response.json())
+      .then(cloudData => {
+        if (cloudData) {
+          // Nếu trên mạng có dữ liệu, lấy về đè vào máy và cập nhật lại bảng uốn
+          localStorage.setItem("dataItems_cochupha", JSON.stringify(cloudData));
+          renderTable();
+        }
+      })
+      .catch(error => {
+        console.error("Không lấy được dữ liệu từ mạng, đang dùng dữ liệu trên máy:", error);
+      });
+    };
+
     const editData = (id) => {
       const savedData = JSON.parse(localStorage.getItem("dataItems_cochupha"));
       const item = savedData.find(data => data.id === id);
@@ -285,18 +321,26 @@ height: 120px;   /* Chiều cao */
       document.getElementById("electric").value = item.electric;
       document.getElementById("material").value = item.material;
       document.getElementById("note").value = item.note;
-      editingId = id;  // Ghi lại ID của mục đang chỉnh sửa
+      editingId = id;  
     };
 
     const deleteData = (id) => {
-  const confirmDelete = confirm("Bạn có chắc chắn muốn xóa mục này không?");
-  if (!confirmDelete) return;
+      const confirmDelete = confirm("Bạn có chắc chắn muốn xóa mục này không?");
+      if (!confirmDelete) return;
 
-  let savedData = JSON.parse(localStorage.getItem("dataItems_cochupha"));
-  savedData = savedData.filter(item => item.id !== id);
-  localStorage.setItem("dataItems_cochupha", JSON.stringify(savedData));
-  renderTable();
-};
+      let savedData = JSON.parse(localStorage.getItem("dataItems_cochupha"));
+      savedData = savedData.filter(item => item.id !== id);
+      localStorage.setItem("dataItems_cochupha", JSON.stringify(savedData));
+
+      // Cập nhật lại danh sách sau khi xóa lên mạng đám mây
+      fetch(FIREBASE_URL, {
+        method: "PUT",
+        body: JSON.stringify(savedData),
+        headers: { "Content-Type": "application/json" }
+      });
+
+      renderTable();
+    };
 
     const searchData = () => {
       const searchText = document.getElementById("searchInput").value.toLowerCase();
@@ -307,7 +351,7 @@ height: 120px;   /* Chiều cao */
 
     const renderSearchResults = (data) => {
       const tbody = document.getElementById("dataTable").getElementsByTagName("tbody")[0];
-      tbody.innerHTML = "";  // Xóa dữ liệu cũ
+      tbody.innerHTML = "";  
 
       data.forEach(item => {
         const row = tbody.insertRow();
@@ -350,6 +394,14 @@ height: 120px;   /* Chiều cao */
       reader.onload = function(event) {
         const importedData = JSON.parse(event.target.result);
         localStorage.setItem("dataItems_cochupha", JSON.stringify(importedData));
+        
+        // Khi người dùng nạp file JSON thủ công, cũng đẩy thẳng lên mạng luôn
+        fetch(FIREBASE_URL, {
+          method: "PUT",
+          body: JSON.stringify(importedData),
+          headers: { "Content-Type": "application/json" }
+        });
+
         renderTable();
       };
       reader.readAsText(file);
@@ -367,12 +419,14 @@ height: 120px;   /* Chiều cao */
       document.getElementById("note").value = '';
     };
 
-        // Khi trang web load, render bảng
+    // Khi vừa mở trang web lên, vẽ bảng từ máy trước rồi đồng bộ dữ liệu mới nhất từ mạng đám mây về ngay lập tức
     window.onload = function () {
       renderTable();
+      loadDataFromFirebase();
     };
     
   </script>
+
 </div>
 </body>
 </html>
