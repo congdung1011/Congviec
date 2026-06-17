@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>uốn cô chu pha</title>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+<style>
+  body {
+    font-family: Arial, sans-serif; /* Font chữ cho toàn bộ trang */
+    padding: 20px; /* Khoảng cách nội dung với viền trình duyệt */
+    font-size: 18px; /* Kích thước chữ mặc định */
+    background-color: #ccf5ff; /* Đặt nền trang thành màu xanh nhạt */
+  }
+  input, button, select {
+    margin: 4px 0; /* Khoảng cách trên/dưới giữa các ô nhập và nút */
+    padding: 6px 12px; /* Khoảng cách bên trong nút/ô nhập */
+    font-size: 30px; /* Kích thước chữ cho nút và ô nhập */
+  }
+  input[type="file"] {
+    font-size: 25px; /* Kích thước chữ riêng cho ô chọn file */
+  }
+  input {
+    width: 800px; /* Chiều rộng của ô nhập liệu */
+    font-size: 50px; /* Kích thước chữ trong ô nhập */
+    padding: 15px 35px; /* Khoảng cách bên trong ô nhập */
+    margin: 3px 0; /* Khoảng cách trên/dưới mỗi ô nhập */
+    background-color: #FFFFE0;
+  }
+  table {
+    width: 100%; /* Bảng chiếm toàn bộ chiều rộng */
+    border-collapse: collapse; /* Gộp viền các ô lại với nhau */
+    margin-top: 20px; /* Khoảng cách phía trên bảng */
+    font-size: 25px; /* Kích thước chữ trong bảng */
+  }
+  th, td {
+    border: 2px solid purple; /* Viền của các ô bảng màu tím */
+    padding: 8px; /* Khoảng cách nội dung với viền ô */
+    text-align: center; /* Căn giữa nội dung ô */
+    font-size: 25px; /* Kích thước chữ trong ô */
+  }
+  th {
+    background-color:#FFA500 ; /* Nền xám nhạt cho hàng tiêu đề */
+    color:#0033AA ;
+  }
+  td:nth-child(2) { /* Áp dụng cho cột thứ 2 - Bán kính */
+    color: red; /* Chữ màu xanh dương */
+    font-weight: bold;
+    background-color: #ccffcc;
+  }
+  td:nth-child(7) { /* Áp dụng cho cột thứ 7 - Điện */
+    color: red; /* Chữ màu đỏ */
+    background-color: #ccffcc;
+    font-weight: bold;
+  }
+  .section {
+    margin-bottom: 10px; /* Khoảng cách giữa các phần */
+  }
+  .btn {
+    padding: 6px 12px; /* Kích thước nút bấm */
+    color: white; /* Chữ trên nút màu trắng */
+    border: none; /* Bỏ viền nút */
+    cursor: pointer; /* Đổi con trỏ chuột khi hover */
+    font-size: 16px; /* Kích thước chữ trên nút */
+  }
+  .delete-btn { background-color: red; } /* Nút xoá có nền đỏ */
+  .edit-btn { background-color: orange; } /* Nút sửa có nền cam */
+  .export-btn { background-color: green; } /* Nút xuất file có nền xanh lá */
+  .import-btn { background-color: blue; } /* Nút nhập file có nền xanh dương */
+
+/* Áp dụng hiệu ứng cho các ô nhập liệu chính */
+input#searchInput,
+input#title,
+input#radius,
+input#speed,
+input#hydraulic,
+input#thickness,
+input#preheat,
+input#electric,
+input#material,
+input#note {
+  background: linear-gradient(120deg, #d4f1f9 25%, #ffffff 50%, #d4f1f9 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 5s linear infinite;
+  border: 2px solid #FF7F7F ;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #a0eaff;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes pulseRed {
+  0% {
+    box-shadow: 0 0 5px red;
+  }
+  50% {
+    box-shadow: 0 0 20px #E0FFFF ;
+  }
+  100% {
+    box-shadow: 0 0 5px red;
+  }
+}
+
+/* Áp dụng cả shimmer và pulse cho cột Bán kính & Điện */
+#dataTable td:nth-child(2),
+#dataTable td:nth-child(7) {
+  background: linear-gradient(
+    120deg,
+    #e3f2fd 25%,   /* xanh lam rất nhạt */
+    #e8f5e9 50%,   /* xanh lục rất nhạt */
+    #e3f2fd 75%
+  )  ;
+  background-size: 1000px 100%;
+  animation:
+    shimmer 4s linear infinite,
+    pulseRed 5s ease-in-out infinite;
+  border-radius: 6px;
+}
+#passwordInput {
+  display: block;
+  margin: 0 auto;      /* Căn giữa ngang */
+  width: 400px;   /* ví dụ chiều rộng */
+  height: 120px;   /* Chiều cao */
+  font-size: 40px;
+  padding: 10px 20px;
+}
+.title-cochupha {
+  color: red;
+  font-size: 50px;
+  text-shadow: 2px 2px 5px gray;
+}
+</style>
+
+<script>
+  function checkPassword() {
+    const password = document.getElementById("passwordInput").value;
+    
+    // Mã hóa mật khẩu người dùng nhập vào bằng MD5
+    const hashedPassword = CryptoJS.MD5(password).toString();
+    
+    // So sánh chuỗi đã mã hóa (Chuỗi dưới đây tương đương mật khẩu "qqqq")
+    if (hashedPassword === "343d9040a671c45832ee5381860e2996") {
+      document.getElementById("passwordContainer").style.display = "none";
+      document.getElementById("mainContent").style.display = "block";
+      renderTable(); // Tải bảng dữ liệu sau khi nhập đúng
+    } else {
+      document.getElementById("errorMessage").innerText = "Sai mật khẩu! Vui lòng thử lại.";
+    }
+  }
+</script>
+</head>
+
+<body>
+  <div id="passwordContainer" style="text-align: center; margin-top: 100px;">
+    <h2 class="title-cochupha">CÔ CHU PHA</h2>
+    <h2>Vui lòng nhập mật khẩu để truy cập:</h2>
+    <input type="password" id="passwordInput" style="font-size: 40px; padding: 40px; width: 400px;" />
+    <br><br>
+    <button onclick="checkPassword()" style="font-size: 24px; padding: 10px 20px;">Xác nhận</button>
+    <p id="errorMessage" style="color: red; font-size: 20px;"></p>
+  </div>
+
+  <div id="mainContent" style="display: none;">
+    <h2>Thông số uốn cô chu pha</h2>
+
+    <div class="section">
+      <input id="searchInput" type="text" placeholder="Tìm kiếm tiêu đề..." oninput="searchData()">
+      <button class="btn" onclick="searchData()">Tìm kiếm</button>
+    </div>
+
+    <div class="section">
+      <input id="title" type="text" placeholder="Tiêu đề">
+      <input id="radius" type="text" placeholder="Bán kính">
+      <input id="speed" type="text" placeholder="Tốc độ">
+      <input id="hydraulic" type="text" placeholder="Thủy lực">
+      <input id="thickness" type="text" placeholder="Dày">
+      <input id="preheat" type="text" placeholder="Preheat">
+      <input id="electric" type="text" placeholder="Điện">
+      <input id="material" type="text" placeholder="Chất liệu">
+      <input id="note" type="text" placeholder="Ghi chú">
+      <button id="saveButton" onclick="saveData()">Lưu</button>
+      <button class="btn export-btn" onclick="exportJSON()">Xuất JSON</button>
+      <input type="file" id="importFile" accept=".json" onchange="importJSON()" />
+    </div>
+
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>Tiêu đề</th>
+          <th>Bán kính</th>
+          <th>Tốc độ</th>
+          <th>Thủy lực</th>
+          <th>Dày</th>
+          <th>Preheat</th>
+          <th>Điện</th>
+          <th>Chất liệu</th>
+          <th>Ghi chú</th>
+          <th>Hành động</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <script>
+    let editingId = null;
+
+    // ĐƯỜNG LINK FIREBASE CỦA BẠN
+    const FIREBASE_URL = "https://du-lieu-uon-default-rtdb.asia-southeast1.firebasedatabase.app/thongso.json";
+
+    const getInputData = () => ({
+      id: editingId || Date.now(),
+      title: document.getElementById("title").value.trim(),
+      radius: document.getElementById("radius").value.trim() || '',  
+      speed: document.getElementById("speed").value.trim() || '',  
+      hydraulic: document.getElementById("hydraulic").value.trim() || '',  
+      thickness: document.getElementById("thickness").value.trim() || '',  
+      preheat: document.getElementById("preheat").value.trim() || '',  
+      electric: document.getElementById("electric").value.trim() || '',  
+      material: document.getElementById("material").value.trim() || '',  
+      note: document.getElementById("note").value.trim() || ''  
+    });
+
+    const saveData = () => {
+      const data = getInputData();
+      if (!data.title) {
+        alert("Vui lòng điền Tiêu đề.");
+        return;
+      }
+
+      let savedData = JSON.parse(localStorage.getItem("dataItems_cochupha") || "[]");
+      if (editingId) {
+        const index = savedData.findIndex(item => item.id === editingId);
+        if(index !== -1) savedData[index] = data;
+      } else {
+        savedData.push(data);
+      }
+      localStorage.setItem("dataItems_cochupha", JSON.stringify(savedData));
+      
+      fetch(FIREBASE_URL, {
+        method: "PUT",
+        body: JSON.stringify(savedData),
+        headers: { "Content-Type": "application/json" }
+      })
+      .then(response => response.json())
+      .then(() => {
+        console.log("Đã đồng bộ lên mạng đám mây thành công!");
+      })
+      .catch(error => {
+        console.error("Lỗi đồng bộ mạng:", error);
+      });
+
+      editingId = null;  
+      renderTable();
+      clearForm();
+    };
+
+    const renderTable = () => {
+      const data = JSON.parse(localStorage.getItem("dataItems_cochupha") || "[]");
+      const tbody = document.getElementById("dataTable").getElementsByTagName("tbody")[0];
+      tbody.innerHTML = "";  
+
+      data.forEach(item => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+          <td>${item.title}</td>
+          <td class="sparkle">${item.radius}</td>
+          <td>${item.speed}</td>
+          <td>${item.hydraulic}</td>
+          <td>${item.thickness}</td>
+          <td>${item.preheat}</td>
+          <td class="sparkle">${item.electric}</td>
+          <td>${item.material}</td>
+          <td>${item.note}</td>
+          <td>
+            <button class="btn edit-btn" onclick="editData(${item.id})">Sửa</button>
+            <button class="btn delete-btn" onclick="deleteData(${item.id})">Xóa</button>
+          </td>
+        `;
+      });
+    };
+
+    const loadDataFromFirebase = () => {
+      fetch(FIREBASE_URL)
+      .then(response => response.json())
+      .then(cloudData => {
+        if (cloudData) {
+          localStorage.setItem("dataItems_cochupha", JSON.stringify(cloudData));
+          renderTable();
+        }
+      })
+      .catch(error => {
+        console.error("Không lấy được dữ liệu từ mạng, đang dùng dữ liệu trên máy:", error);
+      });
+    };
+
+    const editData = (id) => {
+      const savedData = JSON.parse(localStorage.getItem("dataItems_cochupha"));
+      const item = savedData.find(data => data.id === id);
+      document.getElementById("title").value = item.title;
+      document.getElementById("radius").value = item.radius;
+      document.getElementById("speed").value = item.speed;
+      document.getElementById("hydraulic").value = item.hydraulic;
+      document.getElementById("thickness").value = item.thickness;
+      document.getElementById("preheat").value = item.preheat;
+      document.getElementById("electric").value = item.electric;
+      document.getElementById("material").value = item.material;
+      document.getElementById("note").value = item.note;
+      editingId = id;  
+    };
+
+    const deleteData = (id) => {
+      const confirmDelete = confirm("Bạn có chắc chắn muốn xóa mục này không?");
+      if (!confirmDelete) return;
+
+      let savedData = JSON.parse(localStorage.getItem("dataItems_cochupha"));
+      savedData = savedData.filter(item => item.id !== id);
+      localStorage.setItem("dataItems_cochupha", JSON.stringify(savedData));
+
+      fetch(FIREBASE_URL, {
+        method: "PUT",
+        body: JSON.stringify(savedData),
+        headers: { "Content-Type": "application/json" }
+      });
+
+      renderTable();
+    };
+
+    const searchData = () => {
+      const searchText = document.getElementById("searchInput").value.toLowerCase();
+      const savedData = JSON.parse(localStorage.getItem("dataItems_cochupha") || "[]");
+      const filteredData = savedData.filter(item => item.title.toLowerCase().includes(searchText));
+      renderSearchResults(filteredData);
+    };
+
+    const renderSearchResults = (data) => {
+      const tbody = document.getElementById("dataTable").getElementsByTagName("tbody")[0];
+      tbody.innerHTML = "";  
+
+      data.forEach(item => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+          <td>${item.title}</td>
+          <td class="sparkle">${item.radius}</td>
+          <td>${item.speed}</td>
+          <td>${item.hydraulic}</td>
+          <td>${item.thickness}</td>
+          <td>${item.preheat}</td>
+          <td class="sparkle">${item.electric}</td>
+          <td>${item.material}</td>
+          <td>${item.note}</td>
+          <td>
+            <button class="btn edit-btn" onclick="editData(${item.id})">Sửa</button>
+            <button class="btn delete-btn" onclick="deleteData(${item.id})">Xóa</button>
+          </td>
+        `;
+      });
+    };
+
+    const exportJSON = () => {
+      const data = localStorage.getItem("dataItems_cochupha");
+      if (!data) {
+        alert("Không có dữ liệu để xuất.");
+        return;
+      }
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "cochupha.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    const importJSON = () => {
+      const file = document.getElementById("importFile").files[0];
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const importedData = JSON.parse(event.target.result);
+        localStorage.setItem("dataItems_cochupha", JSON.stringify(importedData));
+        
+        fetch(FIREBASE_URL, {
+          method: "PUT",
+          body: JSON.stringify(importedData),
+          headers: { "Content-Type": "application/json" }
+        });
+
+        renderTable();
+      };
+      reader.readAsText(file);
+    };
+
+    const clearForm = () => {
+      document.getElementById("title").value = '';
+      document.getElementById("radius").value = '';
+      document.getElementById("speed").value = '';
+      document.getElementById("hydraulic").value = '';
+      document.getElementById("thickness").value = '';
+      document.getElementById("preheat").value = '';
+      document.getElementById("electric").value = '';
+      document.getElementById("material").value = '';
+      document.getElementById("note").value = '';
+    };
+
+    window.onload = function () {
+      renderTable();
+      loadDataFromFirebase();
+    };
+    </script>
+  </div>
+</body>
+</html>
+00001
