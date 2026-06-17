@@ -56,7 +56,7 @@ Phan Công Dũng
     document.getElementById("errorMessage").innerText = "Đang xử lý đăng nhập...";
 
     // Khóa cứng: Cứ F5 hoặc tắt trình duyệt là bắt đăng nhập lại từ đầu
-    firebase.auth().setPersistence('none')
+    firebase.auth().setPersistence('session')
       .then(() => {
         return firebase.auth().signInWithEmailAndPassword(email, password);
       })
