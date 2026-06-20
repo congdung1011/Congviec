@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Ghi Giờ Tăng Ca</title>
+  
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+  <style>
+    body { font-family: Arial; font-size: 20px; padding: 5px; background: #f0f8ff; }
+    input, button { margin: 5px 0; padding: 15px; width: 30%; font-size: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 50px; font-size: 30px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background: #dff0d8; }
+    .btn-xoa { color: red; cursor: pointer; font-weight: bold; margin-right: 10px; }
+    .btn-sua { color: blue; cursor: pointer; font-weight: bold; }
+    .thang-title { color: red; background: #d0e9f5; font-weight: bold;font-size: 22px; padding: 10px; margin-top: 10px; }
+    .tong-gio { color: blue; }
+    .title-tangca { color: #0033AA; font-size: 50px; text-shadow: 2px 2px 5px gray; }
+    /* Style cho form sửa */
+    .edit-row { background: #fff3cd; }
+  </style>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyC9mGXrWmaSAFfDGFbCrefl2ilx_7BFtvA",
+    authDomain: "du-lieu-uon.firebaseapp.com",
+    databaseURL: "https://du-lieu-uon-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "du-lieu-uon",
+    storageBucket: "du-lieu-uon.firebasestorage.app",
+    messagingSenderId: "783896796114",
+    appId: "1:783896796114:web:050878959c3eac9909860b"
+  };
+  
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  function loginWithEmail() {
+    const email = document.getElementById("txtEmail").value.trim();
+    const password = document.getElementById("txtPassword").value.trim();
+    if(!email || !password) { document.getElementById("errorMessage").innerText = "Vui lòng nhập đầy đủ tài khoản và mật khẩu!"; return; }
+    firebase.auth().setPersistence('session')
+      .then(() => firebase.auth().signInWithEmailAndPassword(email, password))
+      .then((userCredential) => {
+        if (userCredential.user.email === "dungpc1011@gmail.com") {
+          location.reload();
+        } else {
+          document.getElementById("errorMessage").innerText = "Tài khoản không có quyền truy cập!";
+          firebase.auth().signOut();
+        }
+      })
+      .catch(() => document.getElementById("errorMessage").innerText = "Sai tài khoản hoặc mật khẩu!");
+  }
+
+  function logout() { firebase.auth().signOut().then(() => location.reload()); }
+
+  window.onload = function () {
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user && user.email === "dungpc1011@gmail.com") {
+        document.getElementById("loginContainer").style.display = "none";
+        document.getElementById("noiDung").style.display = "block";
+        document.getElementById("userEmail").innerText = "Tài khoản: " + user.email;
+        loadDataFromFirebase();
+      } else {
+        document.getElementById("loginContainer").style.display = "block";
+      }
+    });
+  };
+</script>
+</head>
+<body>
+
+  <div id="loginContainer" style="text-align: center; margin-top: 80px; display: none;">
+    <h2 class="title-tangca">GHI GIỜ TĂNG CA</h2>
+    <h2>ĐĂNG NHẬP HỆ THỐNG</h2>
+    <input type="email" id="txtEmail" placeholder="Nhập Email" style="width: 400px; font-size: 24px; padding: 10px;"><br>
+    <input type="password" id="txtPassword" placeholder="Nhập Mật khẩu" style="width: 400px; font-size: 24px; padding: 10px;"><br><br>
+    <button onclick="loginWithEmail()" style="font-size: 24px; padding: 12px 40px; background-color: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; width: auto;">Vào hệ thống</button>
+    <p id="errorMessage" style="color: red;"></p>
+  </div>
+
+<div id="noiDung" style="display: none;">
+  <div style="text-align: right; margin-bottom: 20px;">
+    <span id="userEmail" style="font-weight: bold; color: green;"></span>
+    <button onclick="logout()" style="font-size: 18px; margin-left: 15px; background-color: #ff4d4d; color: white; padding: 5px 10px; cursor: pointer;">Đăng xuất</button>
+  </div>
+
+  <h2>Ghi Giờ Tăng Ca</h2>
+  <input type="date" id="ngay" />
+  <input type="number" id="gio" placeholder="Số giờ" step="0.1" />
+  <button onclick="themGio()" style="background-color: #8B4513; color: white;">Ghi lại</button>
+  <button onclick="xuatDuLieu()" style="background-color: #28a745; color: white;">Xuất JSON</button>
+  <input type="file" id="taiFile" accept=".json" onchange="taiDuLieuTuFile()" style="width: auto; background-color: #dc3545; color: white;">
+
+  <hr>
+  <div id="danhSachBang"></div>
+
+  <script>
+    let danhSach = [];
+
+    function luuDuLieu() {
+      localStorage.setItem('tangCa', JSON.stringify(danhSach));
+      database.ref('tangca').set(danhSach);
+    }
+
+    function loadDataFromFirebase() {
+      database.ref('tangca').once('value').then(snapshot => {
+        const cloudData = snapshot.val();
+        if (cloudData) { danhSach = cloudData; localStorage.setItem('tangCa', JSON.stringify(danhSach)); }
+        else { const local = localStorage.getItem('tangCa'); danhSach = local ? JSON.parse(local) : []; }
+        hienThiBang();
+      });
+    }
+
+    function hienThiBang() {
+      danhSach.sort((a, b) => new Date(b.ngay) - new Date(a.ngay));
+      const container = document.getElementById('danhSachBang');
+      container.innerHTML = '';
+      const theoThang = {};
+      danhSach.forEach((item, index) => {
+        item.originalIndex = index; // Lưu index để sửa chính xác
+        const thang = item.ngay.substring(0, 7);
+        if (!theoThang[thang]) theoThang[thang] = [];
+        theoThang[thang].push(item);
+      });
+
+      Object.keys(theoThang).sort().reverse().forEach(thang => {
+        const bangHTML = document.createElement('div');
+        bangHTML.innerHTML = `<div class="thang-title">Tháng: ${thang}</div><table id="tbl-${thang}"><tr><th>Ngày</th><th>Giờ</th><th>Thao tác</th></tr></table>`;
+        container.appendChild(bangHTML);
+        const tbl = bangHTML.querySelector('table');
+        let tong = 0;
+        theoThang[thang].forEach((muc) => {
+          const row = tbl.insertRow();
+          row.setAttribute("id", "row-" + muc.originalIndex);
+          row.innerHTML = `<td>${muc.ngay}</td><td>${muc.gio}</td><td>
+            <span class="btn-sua" onclick="suaDong(${muc.originalIndex})">Sửa</span> | 
+            <span class="btn-xoa" onclick="xoaDong(${muc.originalIndex})">Xoá</span></td>`;
+          tong += parseFloat(muc.gio);
+        });
+        bangHTML.innerHTML += `<div class="tong-gio">Tổng tháng ${thang}: ${tong.toFixed(1)} giờ</div>`;
+      });
+    }
+
+    function themGio() {
+      const ngay = document.getElementById('ngay').value;
+      const gio = document.getElementById('gio').value;
+      if (!ngay || !gio) return alert('Nhập đủ thông tin!');
+      danhSach.push({ ngay, gio });
+      luuDuLieu();
+      hienThiBang();
+    }
+
+    function xoaDong(idx) {
+      if (confirm('Xoá dòng này?')) {
+        danhSach.splice(idx, 1);
+        luuDuLieu();
+        hienThiBang();
+      }
+    }
+
+    // Hàm sửa mới: Thay đổi giao diện dòng cần sửa thành input
+    function suaDong(idx) {
+      const row = document.getElementById("row-" + idx);
+      const item = danhSach[idx];
+      
+      row.innerHTML = `
+        <td><input type="date" id="edit-ngay" value="${item.ngay}"></td>
+        <td><input type="number" id="edit-gio" value="${item.gio}" step="0.1" style="width: 80px;"></td>
+        <td>
+          <button onclick="luuSua(${idx})" style="font-size: 14px; padding: 5px;">Lưu</button>
+          <button onclick="hienThiBang()" style="font-size: 14px; padding: 5px;">Huỷ</button>
+        </td>
+      `;
+    }
+
+    function luuSua(idx) {
+      const ngayMoi = document.getElementById("edit-ngay").value;
+      const gioMoi = document.getElementById("edit-gio").value;
+      if (!ngayMoi || !gioMoi) return alert('Vui lòng nhập đầy đủ!');
+      
+      danhSach[idx] = { ngay: ngayMoi, gio: gioMoi };
+      luuDuLieu();
+      hienThiBang();
+    }
+
+    function xuatDuLieu() {
+      const blob = new Blob([JSON.stringify(danhSach)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "du_lieu_tang_ca.json";
+      a.click();
+    }
+
+    function taiDuLieuTuFile() {
+      const file = document.getElementById('taiFile').files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        danhSach = JSON.parse(e.target.result);
+        luuDuLieu();
+        hienThiBang();
+      };
+      reader.readAsText(file);
+    }
+  </script>
+</div>
+</body>
+</html>
