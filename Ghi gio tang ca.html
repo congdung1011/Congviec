@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Ghi Giờ Tăng Ca</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+  <style>
+    body { font-family: Arial; font-size: 20px; padding: 10px; background: #f0f8ff; }
+    input, button { margin: 5px 0; padding: 10px; font-size: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 20px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background: #dff0d8; }
+    .btn-xoa { color: red; cursor: pointer; font-weight: bold; margin-left: 10px; }
+    .btn-sua { color: blue; cursor: pointer; font-weight: bold; }
+    .thang-title { color: red; background: #d0e9f5; font-weight: bold; font-size: 20px; padding: 10px; margin-top: 20px; }
+    .title-tangca { color: #0033AA; font-size: 40px; text-shadow: 2px 2px 5px gray; }
+    #editModal { display: none; background: #fff; border: 2px solid #ccc; padding: 20px; position: fixed; top: 20%; left: 30%; z-index: 1000; box-shadow: 5px 5px 15px gray; border-radius: 10px; }
+  </style>
+</head>
+<body>
+
+  <div id="loginContainer" style="text-align: center; margin-top: 50px; display: none;">
+    <h2 class="title-tangca">GHI GIỜ TĂNG CA</h2>
+    <input type="email" id="txtEmail" placeholder="Nhập Email"><br>
+    <input type="password" id="txtPassword" placeholder="Nhập Mật khẩu"><br>
+    <button onclick="loginWithEmail()">Đăng nhập</button>
+    <p id="errorMessage" style="color: red;"></p>
+  </div>
+
+  <div id="noiDung" style="display: none;">
+    <div style="text-align: right;">
+      <span id="userEmail" style="color: green;"></span> 
+      <button onclick="logout()">Đăng xuất</button>
+    </div>
+
+    <h3>Ghi Giờ Mới</h3>
+    <input type="date" id="ngay" />
+    <input type="number" id="gio" placeholder="Nhập số giờ" step="0.1" />
+    <button onclick="themGio()">Ghi lại</button>
+
+    <div id="danhSachBang"></div>
+  </div>
+
+  <div id="editModal">
+    <h3>Sửa dữ liệu</h3>
+    <input type="hidden" id="editIndex">
+    Ngày: <br><input type="date" id="editNgay"><br>
+    Giờ: <br><input type="number" id="editGio" step="0.1"><br><br>
+    <button onclick="luuSua()">Lưu thay đổi</button>
+    <button onclick="document.getElementById('editModal').style.display='none'">Hủy</button>
+  </div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyC9mGXrWmaSAFfDGFbCrefl2ilx_7BFtvA",
+    authDomain: "du-lieu-uon.firebaseapp.com",
+    databaseURL: "https://du-lieu-uon-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "du-lieu-uon",
+    storageBucket: "du-lieu-uon.firebasestorage.app",
+    messagingSenderId: "783896796114",
+    appId: "1:783896796114:web:050878959c3eac9909860b"
+  };
+  
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+  let danhSach = [];
+
+  // Hàm đăng nhập với Persistence.SESSION (tự xóa khi tắt trình duyệt)
+  function loginWithEmail() {
+    const email = document.getElementById("txtEmail").value.trim();
+    const password = document.getElementById("txtPassword").value.trim();
+    
+    firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
+      .then(() => {
+        return firebase.auth().signInWithEmailAndPassword(email, password);
+      })
+      .catch((error) => {
+        document.getElementById("errorMessage").innerText = "Sai tài khoản hoặc mật khẩu!";
+      });
+  }
+
+  function logout() { firebase.auth().signOut().then(() => location.reload()); }
+
+  window.onload = function () {
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user && user.email === "dungpc1011@gmail.com") {
+        document.getElementById("loginContainer").style.display = "none";
+        document.getElementById("noiDung").style.display = "block";
+        document.getElementById("userEmail").innerText = "Tài khoản: " + user.email;
+        loadDataFromFirebase();
+      } else {
+        document.getElementById("loginContainer").style.display = "block";
+        document.getElementById("noiDung").style.display = "none";
+      }
+    });
+  };
+
+  function loadDataFromFirebase() {
+    database.ref('tangca').once('value').then(snapshot => {
+      danhSach = snapshot.val() || [];
+      hienThiBang();
+    });
+  }
+
+  function luuDuLieu() {
+    database.ref('tangca').set(danhSach);
+  }
+
+  function hienThiBang() {
+    const container = document.getElementById('danhSachBang');
+    container.innerHTML = '';
+    danhSach.sort((a, b) => new Date(b.ngay) - new Date(a.ngay));
+    
+    const theoThang = {};
+    danhSach.forEach((muc, index) => {
+      const thang = muc.ngay.substring(0, 7);
+      if (!theoThang[thang]) theoThang[thang] = [];
+      theoThang[thang].push({ ...muc, id: index });
+    });
+
+    Object.keys(theoThang).sort().reverse().forEach(thang => {
+      const div = document.createElement('div');
+      div.innerHTML = `<div class="thang-title">Tháng: ${thang}</div><table><tr><th>Ngày</th><th>Giờ</th><th>Thao tác</th></tr></table>`;
+      const table = div.querySelector('table');
+      theoThang[thang].forEach(muc => {
+        const row = table.insertRow();
+        row.insertCell(0).textContent = muc.ngay;
+        row.insertCell(1).textContent = muc.gio;
+        const cell = row.insertCell(2);
+        cell.innerHTML = `<span class="btn-sua" onclick="openEditModal(${muc.id})">Sửa</span><span class="btn-xoa" onclick="xoaDong(${muc.id})">Xoá</span>`;
+      });
+      container.appendChild(div);
+    });
+  }
+
+  function openEditModal(index) {
+    const item = danhSach[index];
+    document.getElementById('editIndex').value = index;
+    document.getElementById('editNgay').value = item.ngay;
+    document.getElementById('editGio').value = item.gio;
+    document.getElementById('editModal').style.display = 'block';
+  }
+
+  function luuSua() {
+    const index = document.getElementById('editIndex').value;
+    danhSach[index].ngay = document.getElementById('editNgay').value;
+    danhSach[index].gio = document.getElementById('editGio').value;
+    luuDuLieu();
+    hienThiBang();
+    document.getElementById('editModal').style.display = 'none';
+  }
+
+  function themGio() {
+    const ngay = document.getElementById('ngay').value;
+    const gio = document.getElementById('gio').value;
+    if (!ngay || !gio) return alert('Vui lòng nhập đủ ngày và giờ!');
+    danhSach.push({ ngay, gio });
+    luuDuLieu();
+    hienThiBang();
+  }
+
+  function xoaDong(index) {
+    if (confirm('Bạn có chắc muốn xoá dòng này không?')) {
+      danhSach.splice(index, 1);
+      luuDuLieu();
+      hienThiBang();
+    }
+  }
+</script>
+</body>
+</html>
