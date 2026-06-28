@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Công Việc Cá Nhân</title>
+  <style>
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      overflow-y: auto; overflow-x: hidden;
+      font-family: sans-serif;
+    }
+
+    .bg-img {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: -1;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 30px 20px;
+      max-width: 400px;
+      margin: auto;
+      top: 5%;
+    }
+
+    h1, h12 {
+      color: white;
+      font-size: 28px;
+      margin: 5px 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }
+
+    /* Hiệu ứng 3D và lấp lánh cho nút */
+    .shimmer {
+      display: block;
+      margin: 15px 0;
+      padding: 16px 20px;
+      text-decoration: none;
+      border-radius: 15px;
+      font-size: 19px;
+      font-weight: 800;
+      
+      color: #ff0000; /* Màu chữ đỏ đậm */
+      
+      /* Thêm viền trắng 1px quanh chữ */
+      text-shadow: -0.5px -0.5px 0 #fff, 0.5px -0.5px 0 #fff, -0.5px 0.5px 0 #fff, 0.5px 0.5px 0 #fff;
+      
+      background: linear-gradient(90deg, 	#FFFF99 0%, #CCFFFF	 50%, #FFFF99 100%);
+      background-size: 200% 100%;
+      border: 2px solid red;
+      
+      animation: glitter 7s infinite linear;
+      transition: filter 0.3s ease, transform 0.2s ease;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2); /* Tạo khối cho nút */
+    }
+
+    .shimmer:hover {
+      filter: brightness(0.95);
+      transform: scale(1.03);
+      cursor: pointer;
+    }
+
+    @keyframes glitter {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+  </style>
+</head>
+<body>
+  <img class="bg-img" src="qqq.gif" alt="Background GIF" />
+
+  <div class="container">
+    <h1>Các Mục Công Việc Của</h1>
+    <h12>PHAN CÔNG DŨNG</h12>
+    
+    <a href="Uon cochupha.html" target="_blank" class="shimmer">Uốn cô chu pha</a>
+    <a href="Uon nengkan.html" target="_blank" class="shimmer">Uốn nengkan</a>
+    <a href="Ghi gio tang ca.html" target="_blank" class="shimmer">Ghi giờ tăng ca</a>
+    <a href="Khoi luong ong.html" target="_blank" class="shimmer">Tính khối lượng ống (파이프 계산)</a>
+    <a href="Khoi luong thep.html" target="_blank" class="shimmer">Tính khối lượng thép H (H 계산)</a>
+    <a href="Tinh ban kinh.html" target="_blank" class="shimmer">Tính bán kính (반지름 계산)</a>
+    <a href="Mua sam.html" target="_blank" class="shimmer">Mua sắm</a> 
+  </div>
+</body>
+</html>
